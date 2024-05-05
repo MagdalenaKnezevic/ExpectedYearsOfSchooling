@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expected Years Of Schooling</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        svg {
+            width: 100%;
+            height: auto;
+        }
+        .country {
+            fill: #ccc;
+            stroke: #fff;
+            stroke-width: 1;
+        }
+        .selected {
+            fill: #f00;
+        }
+    </style>
+</head>
+<body>
+    <svg id="world-map"></svg>
+
+    <script>
+        d3.json("custom.geo.json").then(function(geojson) {
+            var width = 800;
+            var height = 600;
+
+            var svg = d3.select("#world-map")
+                .attr("width", width)
+                .attr("height", height);
+
+            var projection = d3.geoMercator()
+                .fitSize([width, height], geojson);
+
+            var path = d3.geoPath()
+                .projection(projection);
+
+            svg.selectAll(".country")
+                .data(geojson.features)
+                .enter().append("path")
+                .attr("class", "country")
+                .attr("d", path)
+                .on("click", function(event, d) {
+                    console.log(d.properties.name);
+                });
+        });
+    </script>
+</body>
+</html>
