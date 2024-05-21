@@ -5,25 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Expected Years Of Schooling</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
     <style>
-        svg {
-            width: 100%;
-            height: auto;
+        #container {
+            display: flex;
         }
-        .country {
-            fill: #ccc;
-            stroke: #fff;
-            stroke-width: 1;
+        #world-map {
+            flex: 1;
         }
-        .selected {
-            fill: #f00;
+        #barchart {
+            flex: 1;
+        }
+        .tooltip {
+            position: absolute;
+            visibility: hidden;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 5px;
+        }
+        #linechart {
+            width: 800px;
+            height: 400px;
+            margin: 20px auto;
         }
     </style>
 </head>
 <body>
-    <svg id="world-map"></svg>
+    <header>Expected Years Of Schooling</header>
+    <div id="container">
+        <svg id="world-map"></svg>
+        <svg id="barchart"></svg>
+    </div>
+    <div id="linechart"></div>
 
     <script>
+        // Existing code for world map
         d3.json("custom.geo.json").then(function(geojson) {
             var width = 800;
             var height = 600;
@@ -37,16 +54,165 @@
 
             var path = d3.geoPath()
                 .projection(projection);
+            
+        
 
             svg.selectAll(".country")
                 .data(geojson.features)
                 .enter().append("path")
                 .attr("class", "country")
                 .attr("d", path)
+                .attr("id", function(d, i) { return "country" + i; })
                 .on("click", function(event, d) {
+                    d3.selectAll(".country").classed("selected", false);
+                    d3.select(this).classed("selected", true);
                     console.log(d.properties.name);
+                    drawLineChart(d.properties.name);
+                })
+                .on("mouseover", function(event, d) {
+                    d3.select(this).attr("id", "highlighted-country");
+                })
+                .on("mouseout", function(event, d) {
+                    d3.select(this).attr("id", null);
                 });
         });
+
+        // New code for bar chart
+        d3.csv("schooling(1).csv").then(function(data) {
+            // Convert numeric values from strings to numbers
+            data.forEach(function(d) {
+                d["Expected Years of Schooling (2021)"] = +d["Expected Years of Schooling (2021)"];
+                d["HDI Rank (2021)"] = +d["HDI Rank (2021)"];
+            });
+
+            // Filter and sort data by HDI Rank (2021)
+            //var top10 = data.sort((a, b) => a["HDI Rank (2021)"] - b["HDI Rank (2021)"]).slice(0, 10);
+
+            data = data.filter(d => d["HDI Rank (2021)"] > 0);
+            data.sort((a, b) => a["HDI Rank (2021)"] - b["HDI Rank (2021)"]);
+            var top10=data.slice(0, 10);
+            // Set dimensions for the bar chart
+            var barWidth = 650;
+            var barHeight = 500;
+            var margin = {top: 60, right: 0, bottom: 100, left: 200};
+
+            var x = d3.scaleBand()
+                .domain(top10.map(d => d.Country))
+                .range([margin.left, barWidth - margin.right])
+                .padding(0.1);
+
+            var y = d3.scaleLinear()
+                .domain([0, d3.max(top10, d => d["Expected Years of Schooling (2021)"])])
+                .nice()
+                .range([barHeight - margin.bottom, margin.top]);
+
+            var svg = d3.select("#barchart")
+                .attr("width", barWidth)
+                .attr("height", barHeight);
+
+            svg.append("text")
+                .attr("x", (barWidth / 1.5))             
+                .attr("y", margin.top / 2)
+                .attr("text-anchor", "middle")   
+                .attr("class", "chart-title")  
+                .text("Top 10 Countries by HDI Rank (2021) - Expected Years of Schooling in 2021");
+
+            svg.append("g")
+                .selectAll("rect")
+                .data(top10)
+                .enter().append("rect")
+                .attr("x", d => x(d.Country))
+                .attr("y", d => y(d["Expected Years of Schooling (2021)"]))
+                .attr("height", d => y(0) - y(d["Expected Years of Schooling (2021)"]))
+                .attr("width", x.bandwidth())
+                .attr("fill", "#aa18aa");
+
+            svg.append("g")
+                .attr("class", "x-axis")
+                .attr("transform", `translate(0,${barHeight - margin.bottom})`)
+                .call(d3.axisBottom(x).tickSizeOuter(0))
+                .selectAll("text")
+                .attr("transform", "rotate(-45)")
+                .style("text-anchor", "end");
+
+            svg.append("g")
+                .attr("class", "y-axis")
+                .attr("transform", `translate(${margin.left},0)`)
+                .call(d3.axisLeft(y));
+        });
+
+         // Function to draw line chart
+         function drawLineChart(country) {
+            d3.csv("schooling(1).csv").then(function(data) {
+                var countryData = data.filter(d => d.Country === country)[0];
+
+                if (!countryData) {
+                    console.log(`No data available for ${country}`);
+                    return;
+                }
+
+                var years = d3.range(1990, 2022);
+                var expectedYears = years.map(year => {
+                    var value = countryData[`Expected Years of Schooling (${year})`];
+                    return value ? +value : null;
+                });
+
+                // Remove null values from expectedYears
+                var filteredYears = years.filter((year, i) => expectedYears[i] !== null);
+                var filteredExpectedYears = expectedYears.filter(d => d !== null);
+
+                if (filteredExpectedYears.length === 0) {
+                    console.log(`No valid data available for ${country}`);
+                    return;
+                }
+
+                // Set dimensions for the line chart
+                var lineWidth = 800;
+                var lineHeight = 400;
+                var margin = {top: 20, right: 30, bottom: 30, left: 40};
+
+                var x = d3.scalePoint()
+                    .domain(filteredYears)
+                    .range([margin.left, lineWidth - margin.right]);
+
+                var y = d3.scaleLinear()
+                    .domain([0, d3.max(filteredExpectedYears)])
+                    .nice()
+                    .range([lineHeight - margin.bottom, margin.top]);
+
+                var line = d3.line()
+                    .x((d, i) => x(filteredYears[i]))
+                    .y(d => y(d));
+
+                var svg = d3.select("#linechart").html("")
+                    .append("svg")
+                    .attr("width", lineWidth)
+                    .attr("height", lineHeight);
+
+                svg.append("g")
+                    .attr("transform", `translate(0,${lineHeight - margin.bottom})`)
+                    .call(d3.axisBottom(x).tickFormat(d3.format("d")));
+
+                svg.append("g")
+                    .attr("transform", `translate(${margin.left},0)`)
+                    .call(d3.axisLeft(y));
+
+                svg.append("path")
+                    .datum(filteredExpectedYears)
+                    .attr("fill", "none")
+                    .attr("stroke", "#aa18aa")
+                    .attr("stroke-width", 1.5)
+                    .attr("d", line);
+
+                svg.append("text")
+                    .attr("x", (lineWidth / 2))             
+                    .attr("y", margin.top)
+                    .attr("text-anchor", "middle")   
+                    .attr("class", "chart-title")  
+                    .text(`Expected Years of Schooling in ${country} (1990-2021)`);
+            });
+        }
+
     </script>
 </body>
 </html>
