@@ -1,0 +1,68 @@
+*{
+    font-family: 'Times New Roman', Times, serif;
+}
+header {
+    background-color: purple;
+    color: white;
+    text-align: center;
+    padding: 20px;
+    font-size: 2em;
+}
+.country {
+    fill: #ccc;
+    stroke: #fff;
+    stroke-width: 1;
+    transition: fill 0.3s;
+}
+
+.country:hover {
+    fill: #e969e9;
+}
+
+.selected {
+    fill: #891289;
+}
+
+/* #highlighted-country {
+    fill: #e969e9;
+} */
+
+.chart-title {
+    font-size: 18px; /* Change the font size */
+    font-weight: bold; /* Make the text bold */
+    text-decoration: none; /* Underline the text */
+    fill: black; /* Change the text color */
+    padding-left: 15px; 
+    margin-left: 15px;
+}
+
+#barchart {
+    transform: translateY(80px); /* Pomicanje barcharta dolje za 40px */
+}
+
+.x-axis text {
+    font-size: 12px;
+}
+
+#container {
+    display: flex;
+}
+#world-map {
+    flex: 1;
+}
+#barchart {
+    flex: 1;
+}
+.tooltip {
+    position: absolute;
+    visibility: hidden;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 5px;
+}
+#linechart {
+    width: 800px;
+    height: 400px;
+    margin: 20px auto;
+}
