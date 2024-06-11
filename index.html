@@ -11,23 +11,6 @@
             font-family: Arial, sans-serif;
         }
 
-        header {
-            text-align: center;
-            font-size: 24px;
-            margin: 20px 0;
-        }
-
-        #container {
-            display: flex;
-            justify-content: space-between;
-            margin: 20px;
-        }
-
-        #world-map {
-            border: 1px solid #ccc;
-            width: 50%;
-        }
-
         #barchart-container {
             width: 40%;
             display: flex;
@@ -43,21 +26,12 @@
         .x-axis-label, .y-axis-label, .no-data-message {
             font-size: 16px;
         }
-
-        .no-data-message {
-            color: red;
-            text-align: center;
-            margin-top: 20px;
-        }
-
+        
         #year-select {
             margin-bottom: 20px;
         }
 
-        svg {
-            width: 100%;
-        }
-
+    
         #linechart-container {
             display: flex;
             justify-content: space-between;
@@ -243,7 +217,7 @@
                     .padding(0.1);
 
                 var y = d3.scaleLinear()
-                    .domain([0, d3.max(top10, d => d[`Expected Years of Schooling (${selectedYear})`])])
+                    .domain([0, 22])
                     .nice()
                     .range([barHeight - margin.bottom, margin.top]);
 
@@ -255,6 +229,8 @@
                     .selectAll("text")
                     .attr("transform", "rotate(-45)")
                     .style("text-anchor", "end");
+
+                    
 
                 svgBarChart.select(".y-axis").call(yAxis);
 
@@ -358,6 +334,30 @@
                     .duration(2000)
                     .attr("width", lineChartWidth);
 
+                    // Dodavanje vodoravnih rešetki
+                svgLineChart.append("g")
+                        .attr("class", "grid")
+                        .call(d3.axisLeft(y)
+                        .tickSize(-lineChartWidth)
+                        .tickFormat("")
+                        .tickSizeOuter(0)
+                    );
+
+                svgLineChart.append("g")
+                    .attr("class", "grid")
+                    .attr("transform", `translate(0, ${lineChartHeight})`)
+                    .call(d3.axisBottom(x)
+                    .tickSize(-lineChartHeight)
+                    .tickFormat("")
+                    .tickSizeOuter(0)
+                );
+
+                d3.selectAll(".grid line")
+                    .attr("stroke", "#ddd") // Promjena boje rešetki
+                    .attr("stroke-opacity", "0.9"); // Smanjenje prozirnosti kako bi bile svjetlije
+
+
+
                 svgLineChart.append("text")
                     .attr("class", "chart-title")
                     .attr("text-anchor", "middle")
@@ -429,6 +429,54 @@
                 .attr("class", "y-axis")
                 .call(d3.axisLeft(y));
 
+            
+                svgLineChart2.append("text")
+                    .attr("class", "x-axis-label")
+                    .attr("text-anchor", "middle")
+                    .attr("x", lineChartWidth / 2)
+                    .attr("y", lineChartHeight + 40)
+                    .style("font-size", "16px")
+                    .text("Year");
+
+                svgLineChart2.append("text")
+                    .attr("class", "y-axis-label")
+                    .attr("text-anchor", "middle")
+                    .attr("x", -lineChartHeight / 2)
+                    .attr("y", -40)
+                    .attr("transform", "rotate(-90)")
+                    .style("font-size", "16px")
+                    .text("Expected Years of Schooling");
+
+                    svgLineChart2.append("g")
+    .attr("class", "grid")
+    .call(d3.axisLeft(y)
+        .tickSize(-lineChartWidth)
+        .tickFormat("")
+        .tickSizeOuter(0)
+    );
+
+svgLineChart2.append("g")
+    .attr("class", "grid")
+    .attr("transform", `translate(0,${lineChartHeight})`)
+    .call(d3.axisBottom(x)
+        .tickSize(lineChartHeight)
+        .tickFormat("")
+        .tickSizeOuter(0)
+    );
+
+    svgLineChart2.append("g")
+    .attr("class", "grid")
+    .attr("transform", `translate(0, ${lineChartHeight})`)
+    .call(d3.axisBottom(x)
+        .tickSize(-lineChartHeight)
+        .tickFormat("")
+        .tickSizeOuter(0)
+    );
+
+    d3.selectAll(".grid line")
+    .attr("stroke", "#ddd") // Promjena boje rešetki
+    .attr("stroke-opacity", "0.9"); // Smanjenje prozirnosti kako bi bile svjetlije
+
                 
 
             var continents = Array.from(continentData.keys());
@@ -444,10 +492,15 @@
                 .attr("d", d => line(years.map(year => ({year: year, value: continentData.get(d)[year]}))));
 
             // Add legend
-            var legend = d3.select("#legend").selectAll(".legend-item")
+            var legend = d3.select("#legend")
+                .style("margin-top", "20px")  // Dodajemo marginu na vrhu
+                .selectAll(".legend-item")
                 .data(continents)
                 .enter().append("div")
-                .attr("class", "legend-item");
+                .attr("class", "legend-item")
+                .style("margin-right", "20px")  // Dodajemo marginu sa desne strane
+                .style("margin-bottom", "30px") // Dodajemo marginu na dnu
+                .style("margin-left", "30px");  // Dodajemo marginu na dnu
 
             legend.append("div")
                 .attr("class", "legend-color")

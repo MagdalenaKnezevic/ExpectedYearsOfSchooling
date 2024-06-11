@@ -20,12 +20,9 @@ header {
 }
 
 .selected {
-    fill: #891289;
+    fill: #aa18aa;
 }
 
-/* #highlighted-country {
-    fill: #e969e9;
-} */
 
 .chart-title {
     font-size: 18px; /* Change the font size */
@@ -46,9 +43,13 @@ header {
 
 #container {
     display: flex;
+    justify-content: space-between;
+    margin: 20px;
 }
 #world-map {
     flex: 1;
+    border: 1px solid #ccc;
+    width: 50%;
 }
 #barchart {
     flex: 1;
@@ -66,3 +67,23 @@ header {
     height: 400px;
     margin: 20px auto;
 }
+
+.no-data-message {
+    color: red;
+    text-align: center;
+    margin-top: 20px;
+}
+
+
+svg {
+    width: 100%;
+}
+
+
+
+
+
+
+
+
+
